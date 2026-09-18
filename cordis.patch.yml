@@ -1,0 +1,5 @@
+# dsh-opencode-session-header bundle patch: mount the session-header plugin
+# under its package name, resolved through the profile's node_modules.
+- insert:
+    - id: dsh-opencode-free-tier
+      name: dsh-opencode-free-tier

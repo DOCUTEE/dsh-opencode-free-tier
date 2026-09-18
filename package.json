@@ -1,0 +1,44 @@
+{
+  "name": "dsh-opencode-free-tier",
+  "version": "0.1.0",
+  "description": "Make DSH llm-pi-ai opencode routes pass Zen free-tier gate: opencode User-Agent + canonical ses_ session + bash/read tools. Scoped to opencode.ai only.",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "license": "MIT",
+  "author": "DOCUTEE",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DOCUTEE/dsh-opencode-free-tier.git"
+  },
+  "homepage": "https://github.com/DOCUTEE/dsh-opencode-free-tier#readme",
+  "bugs": {
+    "url": "https://github.com/DOCUTEE/dsh-opencode-free-tier/issues"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "opencode",
+    "opencode-zen",
+    "free-tier",
+    "x-opencode-session"
+  ],
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
