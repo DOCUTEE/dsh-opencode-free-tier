@@ -79,7 +79,7 @@ then register the bundle in `package.json`:
 
 ```sh
 cd ~/.dsh/profiles/web
-pnpm add github:<owner>/dsh-opencode-free-tier
+pnpm add github:DOCUTEE/dsh-opencode-free-tier
 ```
 
 then register the bundle as above.
@@ -87,7 +87,7 @@ then register the bundle as above.
 ### Option C — from a local clone
 
 ```sh
-git clone https://github.com/<owner>/dsh-opencode-free-tier.git
+git clone https://github.com/DOCUTEE/dsh-opencode-free-tier.git
 cd ~/.dsh/profiles/web
 pnpm add file:/path/to/dsh-opencode-free-tier
 ```
@@ -106,15 +106,29 @@ then **restart `dsh web`** once — plugins load at boot.
 
 ## Configure the free route
 
-No API key needed. In `~/.dsh/settings.yaml`:
+No API key needed. The anonymous lane key is the literal string `public`, but
+`llm-pi-ai` still requires the route to *name* a credential — otherwise pi-ai
+refuses the request before it is even sent (`Provider is not configured:
+opencode`). So expose the anonymous key through `$DSH_HOME/.env`:
+
+```sh
+# ~/.dsh/.env (DSH_HOME defaults to ~/.dsh)
+OPENCODE_ANON_KEY=public
+```
+
+In `~/.dsh/settings.yaml`:
 
 ```yaml
 llm-pi-ai:
   providers:
     opencode:
+      apiKeyEnv: OPENCODE_ANON_KEY
       headers:
         Authorization: Bearer public
 ```
+
+**Restart `dsh web`** after editing `.env` — the environment snapshot is taken
+at launch, so a key added while DSH runs is invisible until restart.
 
 Then pick any free model from the `opencode` route (e.g. `mimo-v2.5-free`,
 `deepseek-v4-flash-free`, `ling-3.0-flash-fin-free`, `nemotron-3-ultra-free`).
@@ -133,10 +147,10 @@ curl -s -X POST https://opencode.ai/zen/v1/chat/completions \
 - Without the plugin: `FreeTierError`.
 - With the plugin (restart DSH, chat with the model): normal streamed chunks.
 
-Or run the plugin's own tests (no key needed for unit tests):
+Or run the plugin's own tests:
 
 ```sh
-node --test test/
+npm test
 ```
 
 ## Runtime switch (no restart needed)
@@ -189,6 +203,15 @@ already-correct one and leaving foreign hosts untouched.
   is simply the `403` returning; uninstall then.
 - If upstream DSH ever ships native CLI disguise for the free lane, retire this plugin:
   remove it from `dependencies` + `bundles`, `pnpm install`, restart.
+
+## Troubleshooting
+
+| Symptom | Cause & fix |
+| --- | --- |
+| `Provider is not configured: opencode` | The route names no credential, so pi-ai rejects before sending. Add `OPENCODE_ANON_KEY=public` to `~/.dsh/.env` and `apiKeyEnv: OPENCODE_ANON_KEY` to the route (see Configure), then **restart** `dsh web`. |
+| `403 FreeTierError: free tier can only be used from within OpenCode` | The disguise isn't applied: plugin not installed/enabled, DSH not restarted after install, or the runtime switch disables it. Check `~/.dsh/plugins/dsh-opencode-free-tier.json` is absent or `{"enabled": true}`. |
+| `400 MissingSessionID` | An old `dsh-opencode-session-header` is overwriting the canonical session — remove that plugin. |
+| Key added to `.env` but still `MISSING_CREDENTIAL` | `.env` is snapshotted at launch — restart `dsh web`. |
 
 ## License
 
