@@ -52,11 +52,10 @@ Remove that plugin when installing this one.
 
 ## Install
 
-### Option A — from npm (recommended, once published)
+### Option A — from npm (recommended)
 
 ```sh
-cd ~/.dsh/profiles/web
-pnpm add dsh-opencode-free-tier
+dsh plugin --profile web add dsh-opencode-free-tier
 ```
 
 then register the bundle in `package.json`:
@@ -194,3 +193,21 @@ already-correct one and leaving foreign hosts untouched.
 ## License
 
 [MIT](./LICENSE)
+
+## Release process (maintainers)
+
+Publishing uses [npm trusted publishing (OIDC)](https://docs.npmjs.com/trusted-publishers) —
+no tokens, no OTP. One-time setup on npmjs.com → package → Settings →
+Trusted Publisher: GitHub Actions, user `DOCUTEE`, repository
+`dsh-opencode-free-tier`, workflow `publish.yml`, allowed action `npm publish`.
+
+To release:
+
+```sh
+# 1. bump version in package.json (must match the tag below)
+# 2. commit, then:
+git tag v0.1.0 && git push origin v0.1.0
+```
+
+Pushing the tag runs `.github/workflows/publish.yml`, which runs tests and
+`npm publish`es. Provenance is generated automatically.
