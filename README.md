@@ -29,14 +29,19 @@ A zero-dependency Cordis plugin that fixes all three at the fetch transport laye
   `AsyncLocalStorage` across each adapter stream, so the fetch layer knows which DSH
   conversation a request belongs to (stable session → optimal upstream prompt-cache routing).
 - **Fetch middleware, scoped strictly to `opencode.ai`** (+ subdomains) — every other
-  host passes through byte-for-byte untouched:
-  - missing/non-CLI `User-Agent` → `opencode/<cli-version> (platform arch; node...)`
-  - missing/malformed `x-opencode-session` → canonicalized (`ses_` + 26) from the DSH
-    conversation id; an already-canonical id passes through (cache affinity preserved)
-  - fills `x-opencode-client: cli`, `x-session-affinity`, `X-Session-Id`,
-    `x-opencode-request`, `x-opencode-project` when absent
-  - chat-completions bodies missing `bash`/`read` tools get the stubs appended
-    (`tool_choice: "none"` when the caller had no tools, so the model never calls them)
+  host passes through byte-for-byte untouched. It distinguishes the two lanes:
+  - **Anonymous free lane** (`/zen/...`) — the full CLI disguise: missing/non-CLI
+    `User-Agent` → `opencode/<cli-version> (platform arch; node...)`;
+    missing/malformed `x-opencode-session` → canonicalized (`ses_` + 26) from the DSH
+    conversation id (an already-canonical id passes through, preserving cache affinity);
+    `x-opencode-client: cli`, `x-session-affinity`, `X-Session-Id`,
+    `x-opencode-request`, `x-opencode-project` filled when absent; chat-completions
+    bodies missing `bash`/`read` tools get the stubs appended (`tool_choice: "none"`
+    when the caller had no tools, so the model never calls them).
+  - **Paid OpenCode Go lane** (`/zen/go/...`) — only the stable canonical
+    `x-opencode-session` the Go docs require; the harness's real `User-Agent` and the
+    request body stay untouched. This also fixes DSH's missing session header on the
+    Go lane ([discussion #5495](https://github.com/deepseek-ai/deepseek-harness/discussions/5495)).
 
 Already-correct requests pass through untouched (idempotent) — e.g. it coexists with
 `opencode2dsh` instead of breaking it.

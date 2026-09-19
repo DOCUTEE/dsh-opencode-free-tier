@@ -88,3 +88,33 @@ test('middleware fixes DSH-like request, preserves opencode2dsh request', async 
   await mw({ input: 'https://api.deepseek.com/chat/completions', init: { headers: origHeaders, body: '{}' }, next })
   assert.deepEqual(captured.init.headers, origHeaders)
 })
+
+test('paid Go lane: keeps real UA + tools, only gets canonical session', async () => {
+  const mw = createFreeTierMiddleware({ hosts: ['opencode.ai'], isEnabled: () => true })
+  let captured
+  const next = async (input, init) => {
+    captured = { input, init }
+    return 'ok'
+  }
+  const body = JSON.stringify({ model: 'deepseek-v4.1-flash', messages: [{ role: 'user', content: 'hi' }], stream: true })
+  await requestSessionContext.run('go-conversation-1', () =>
+    mw({
+      input: 'https://opencode.ai/zen/go/v1/chat/completions',
+      init: { method: 'POST', headers: { 'content-type': 'application/json', 'user-agent': 'deepseek-harness/0.1.5' }, body },
+      next,
+    }),
+  )
+  const h = new Headers(captured.init.headers)
+  assert.equal(h.get('user-agent'), 'deepseek-harness/0.1.5', 'Go keeps the harness UA')
+  assert.match(h.get('x-opencode-session'), CANONICAL_SESSION_PATTERN, 'Go gets the session header')
+  assert.equal(captured.init.body, body, 'Go body untouched (no tool injection)')
+
+  // No session context (catalog fetch / probe): still canonical, not empty.
+  await mw({
+    input: 'https://opencode.ai/zen/go/v1/chat/completions',
+    init: { method: 'POST', headers: {}, body },
+    next,
+  })
+  const h2 = new Headers(captured.init.headers)
+  assert.match(h2.get('x-opencode-session'), CANONICAL_SESSION_PATTERN)
+})

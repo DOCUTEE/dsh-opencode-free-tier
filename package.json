@@ -1,6 +1,6 @@
 {
   "name": "dsh-opencode-free-tier",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Make DSH llm-pi-ai opencode routes pass Zen free-tier gate: opencode User-Agent + canonical ses_ session + bash/read tools. Scoped to opencode.ai only.",
   "type": "module",
   "main": "lib/index.js",
